@@ -1,5 +1,18 @@
-import 'package:mobipkg_tools/mobipkg_tools.dart' as mobipkg_tools;
+import 'package:mobipkg_tools/mobipkg_tools.dart';
 
-void main(List<String> arguments) {
-  print('Hello world: ${mobipkg_tools.calculate()}!');
+Future<void> main(List<String> args) async {
+  List<String> arguments = args;
+  final ToolsCommander commander = ToolsCommander();
+  if (args.length == 1) {
+    arguments = convertArgs(args.first);
+  }
+  await commander.run(arguments);
+}
+
+List<String> convertArgs(String argText) {
+  var arg = argText.trim();
+  while (arg.contains('  ')) {
+    arg = arg.replaceAll('  ', ' ');
+  }
+  return arg.split(' ');
 }
