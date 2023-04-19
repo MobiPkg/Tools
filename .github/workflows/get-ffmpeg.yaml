@@ -1,0 +1,23 @@
+name: Get ffmpeg dev
+
+on:
+  - push
+
+jobs:
+  test-run:
+    runs-on: macos-latest
+    steps:
+      - name: 'Install dart'
+        uses: 'dart-lang/setup-dart@v1'
+        with:
+          sdk: 'stable'
+      - name: 'Run to show info'
+        run: |
+          dart --version
+          dart run bin/mobipkg_tools.dart --help
+      - name: 'Run to show info'
+        run: |
+          dart run bin/mobipkg_tools.dart dep ffmpeg
+      - name: 'Run to show info again, the second time have file cached'
+        run: |
+          dart run bin/mobipkg_tools.dart dep ffmpeg
