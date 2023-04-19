@@ -9,6 +9,7 @@ class ToolsCommander {
     );
 
     runner.addCommand(DepCommand());
+    runner.addCommand(EmptyDepCommand());
 
     globalOptions.initArgParser(runner.argParser);
 

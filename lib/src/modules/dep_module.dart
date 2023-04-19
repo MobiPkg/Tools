@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:mobipkg_tools/mobipkg_tools.dart';
+import 'package:path/path.dart';
 
 class Dep {
   final String name;
@@ -26,6 +27,37 @@ class Dep {
     map['firstLevelDeps'] = firstLevelDeps.map((e) => e.name).toList();
     map['deps'] = deps.map((e) => e.toJson()).toList();
     return map;
+  }
+
+  static List<Dep> findEmptyDependenciesInCache() {
+    final files = Directory(_cachePath).listSync();
+
+    final emptyDeps = <Dep>[];
+
+    for (final file in files) {
+      if (!file.path.endsWith('.json')) {
+        continue;
+      }
+      final name = basenameWithoutExtension(file.path);
+
+      if (!name.startsWith('dep_')) {
+        continue;
+      }
+
+      final depName = name.substring(4);
+      final cache = StringSetStringCache(file.path);
+
+      final deps = cache.load()[depName];
+      if (deps == null) {
+        continue;
+      }
+
+      if (deps.isEmpty) {
+        emptyDeps.add(Dep(depName, [], []));
+      }
+    }
+
+    return emptyDeps;
   }
 }
 

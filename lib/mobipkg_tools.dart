@@ -12,6 +12,7 @@ export 'package:process_run/process_run.dart';
 
 export 'src/command/base_command.dart';
 export 'src/command/dep_command.dart';
+export 'src/command/empty_dep_command.dart';
 export 'src/modules/dep_module.dart';
 export 'src/options/global_options.dart';
 export 'src/tools_commander.dart';
