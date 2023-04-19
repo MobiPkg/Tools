@@ -1,10 +1,11 @@
-name: Get ffmpeg dev
+name: Show ffmpeg deps to test mobipkg_tools
+run-name: Get ffmpeg info with mobipkg_tools
 
 on:
   - push
 
 jobs:
-  test-run:
+  show-ffmpeg-deps:
     runs-on: macos-latest
     steps:
       - name: 'Checkout'
