@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:mobipkg_tools/mobipkg_tools.dart';
 
-class DepCommand extends BaseCommand {
+class DepCommand extends BaseVoidCommand {
   @override
   String get description => 'Show dependencies of a package.';
 
@@ -8,19 +10,108 @@ class DepCommand extends BaseCommand {
   String get name => 'dep';
 
   @override
-  FutureOr<void>? run() async {
-    final rest = argResults?.rest;
+  void initParser(ArgParser argParser) {
+    super.initParser(argParser);
 
-    if (rest == null || rest.isEmpty) {
+    argParser.addFlag(
+      'tree',
+      abbr: 't',
+      help: 'Show dependencies in tree format.',
+      defaultsTo: false,
+    );
+
+    argParser.addFlag(
+      'json',
+      abbr: 'j',
+      help: 'Show dependencies in json format.',
+      defaultsTo: false,
+    );
+
+    argParser.addFlag(
+      'first',
+      abbr: 'f',
+      help: 'Just show first level dependencies.',
+      defaultsTo: true,
+    );
+  }
+
+  @override
+  FutureOr<void>? run() async {
+    final rest = argResults.rest;
+
+    if (rest.isEmpty) {
       print('Please specify a package name.');
       return;
     }
 
-    for (final String packageName in rest) {
-      final Set<String> depSet = {};
-      final deps = DepFinder(packageName).find();
-      depSet.addAll(deps);
-      logger.info('Dependencies: \n${depSet.map((e) => '  $e').join('\n')}');
+    final tree = argResults['tree'] as bool;
+    final json = argResults['json'] as bool;
+    final firstLevel = argResults['first'] as bool;
+
+    if (tree && json) {
+      print('Please specify only one format.');
+      return;
     }
+
+    for (final String packageName in rest) {
+      final deps = DepFinder(packageName).find();
+
+      if (tree) {
+        _printTree(packageName, deps, firstLevel);
+      } else if (json) {
+        _printJson(packageName, deps, firstLevel);
+      } else {
+        _printDeps(packageName, deps, firstLevel);
+      }
+    }
+  }
+
+  void _printJson(String packageName, Set<Dep> deps, bool firstLevel) {
+    final map = <String, dynamic>{};
+    for (final dep in deps) {
+      map[dep.name] = dep.toJson();
+    }
+
+    final text = JsonEncoder.withIndent('  ').convert(map);
+    print(text);
+  }
+
+  void _printTree(String packageName, Set<Dep> deps, bool firstLevel) {
+    final buffer = StringBuffer();
+    buffer.writeln('Package: $packageName');
+    buffer.writeln('Dependencies:');
+    buffer.writeln();
+    for (final dep in deps) {
+      buffer.write(dep.treeString());
+    }
+
+    logger.info(buffer.toString());
+  }
+
+  void _printDeps(String packageName, Set<Dep> deps, bool firstLevel) {
+    final Set<String> names = {};
+
+    void addDep(Dep dep) {
+      if (names.contains(dep.name)) {
+        return;
+      }
+      names.add(dep.name);
+      dep.deps.forEach(addDep);
+    }
+
+    for (final dep in deps) {
+      addDep(dep);
+    }
+
+    final buffer = StringBuffer();
+    buffer.writeln('Package: $packageName');
+    buffer.writeln('List:');
+    buffer.writeln();
+    for (final name in names) {
+      buffer.writeln('  $name');
+    }
+    buffer.writeln();
+    buffer.writeln('Dependencies: ${names.length}');
+    logger.info(buffer.toString().trim());
   }
 }

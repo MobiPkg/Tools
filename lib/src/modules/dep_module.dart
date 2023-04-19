@@ -2,12 +2,39 @@ import 'dart:convert';
 
 import 'package:mobipkg_tools/mobipkg_tools.dart';
 
+class Dep {
+  final String name;
+  final List<Dep> firstLevelDeps;
+  final List<Dep> deps;
+
+  Dep(this.name, this.firstLevelDeps, this.deps);
+
+  String treeString([int level = 0]) {
+    final sb = StringBuffer();
+    sb.write('  ' * level);
+    sb.write(name);
+    sb.write('\n');
+    for (final dep in firstLevelDeps) {
+      sb.write(dep.treeString(level + 1));
+    }
+    return sb.toString();
+  }
+
+  Map toJson() {
+    final map = <String, dynamic>{};
+    map['name'] = name;
+    map['firstLevelDeps'] = firstLevelDeps.map((e) => e.name).toList();
+    map['deps'] = deps.map((e) => e.toJson()).toList();
+    return map;
+  }
+}
+
 class DepFinder {
   DepFinder(this.package);
 
   final String package;
 
-  Set<String> find() {
+  Set<Dep> find() {
     return _DepFinder.withPlatform(package).find();
   }
 }
@@ -21,7 +48,7 @@ abstract class _DepFinder {
 
   final String package;
 
-  Set<String> find();
+  Set<Dep> find();
 }
 
 final _cachePath = '${Platform.environment['HOME']}/.cache/.mobipkg_tools';
@@ -41,7 +68,7 @@ class _MacDepFinder extends _DepFinder {
         continue;
       }
       _depSet.add(dep);
-      logger.info('Adding $dep');
+      logger.debug('Adding $dep');
 
       final firstLevelDeps = getFirstLevelDependencies(dep);
       addAllDep(firstLevelDeps);
@@ -50,13 +77,34 @@ class _MacDepFinder extends _DepFinder {
   }
 
   @override
-  Set<String> find() {
+  Set<Dep> find() {
     _depSet.clear();
 
     final firstLevelDeps = getFirstLevelDependencies(package);
     addAllDep(firstLevelDeps);
 
-    return _depSet;
+    final result = <Dep>{};
+
+    for (final dep in _depSet) {
+      result.add(createDep(dep));
+    }
+
+    return result;
+  }
+
+  Dep createDep(String name) {
+    // recursive
+    final firstLevelDeps = getFirstLevelDependencies(name);
+    final deps = <Dep>{};
+    for (final dep in firstLevelDeps) {
+      deps.add(createDep(dep));
+    }
+
+    return Dep(
+      name,
+      deps.where((element) => firstLevelDeps.contains(element.name)).toList(),
+      deps.toList(),
+    );
   }
 
   Set<String> getFirstLevelDependencies(String packageName) {

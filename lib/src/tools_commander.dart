@@ -10,6 +10,10 @@ class ToolsCommander {
 
     runner.addCommand(DepCommand());
 
+    globalOptions.initArgParser(runner.argParser);
+
+    globalOptions.parseArgs(runner.parse(arguments));
+
     await runner.run(arguments);
   }
 }

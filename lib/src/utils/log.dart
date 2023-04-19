@@ -1,4 +1,5 @@
 import 'package:logger/logger.dart';
+import 'package:mobipkg_tools/mobipkg_tools.dart';
 
 mixin LogMixin {
   late final w = logger.w;
@@ -10,18 +11,18 @@ mixin LogMixin {
   late final log = logger.log;
 }
 
-final logger = Logger(
-  level: Level.debug,
-  printer: PrettyPrinter(
-    methodCount: 3,
-    errorMethodCount: 10,
-    printTime: true,
-    // noBoxingByDefault: true,
-  ),
-  filter: ProductionFilter(),
-  // filter: DevelopmentFilter(),
-  output: ConsoleOutput(),
-);
+Logger get logger => Logger(
+      level: globalOptions.verbose ? Level.verbose : Level.info,
+      printer: PrettyPrinter(
+        methodCount: 3,
+        errorMethodCount: 10,
+        printTime: true,
+        // noBoxingByDefault: true,
+      ),
+      filter: ProductionFilter(),
+      // filter: DevelopmentFilter(),
+      output: ConsoleOutput(),
+    );
 
 typedef CCLoggerFunction = void Function(
   dynamic message, [
