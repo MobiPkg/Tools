@@ -31,9 +31,9 @@ class _MacDepFinder extends _DepFinder {
 
   final _depSet = <String>{};
 
-  final _depMap = <String, Set<String>>{};
-
-  late final cache = StringSetStringCache('$_cachePath/dep_$package.json');
+  StringSetStringCache getCacheWithDep(String pkgName) {
+    return StringSetStringCache('$_cachePath/dep_$pkgName.json');
+  }
 
   void addAllDep(Set<String> deps) {
     for (final dep in deps) {
@@ -52,8 +52,6 @@ class _MacDepFinder extends _DepFinder {
   @override
   Set<String> find() {
     _depSet.clear();
-    _depMap.clear();
-    _depMap.addAll(cache.load());
 
     final firstLevelDeps = getFirstLevelDependencies(package);
     addAllDep(firstLevelDeps);
@@ -62,7 +60,8 @@ class _MacDepFinder extends _DepFinder {
   }
 
   Set<String> getFirstLevelDependencies(String packageName) {
-    final cached = _depMap[packageName];
+    final cache = getCacheWithDep(packageName);
+    final cached = cache.load()[packageName];
     if (cached != null) {
       return cached;
     }
@@ -74,8 +73,7 @@ class _MacDepFinder extends _DepFinder {
     final deps = map['dependencies'] as List;
     final set = deps.cast<String>().toSet();
 
-    _depMap[packageName] = set;
-    cache.save(_depMap);
+    cache.save({packageName: set});
 
     return set;
   }
