@@ -10,13 +10,26 @@ class Dep {
 
   Dep(this.name, this.firstLevelDeps, this.deps);
 
-  String treeString([int level = 0]) {
+  String treeString({
+    int level = 0,
+    Set<String>? alreadyPrinted,
+  }) {
+    if (alreadyPrinted != null) {
+      if (alreadyPrinted.contains(name)) {
+        return '${'  ' * level}$name...\n';
+      }
+      alreadyPrinted.add(name);
+    }
+
     final sb = StringBuffer();
     sb.write('  ' * level);
     sb.write(name);
     sb.write('\n');
     for (final dep in firstLevelDeps) {
-      sb.write(dep.treeString(level + 1));
+      sb.write(dep.treeString(
+        level: level + 1,
+        alreadyPrinted: alreadyPrinted,
+      ));
     }
     return sb.toString();
   }

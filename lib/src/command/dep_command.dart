@@ -81,11 +81,16 @@ class DepCommand extends BaseVoidCommand {
     buffer.writeln('Package: $packageName');
     buffer.writeln('Dependencies:');
     buffer.writeln();
+
+    Set<String> pickedDeps = {};
+
     for (final dep in deps) {
-      buffer.write(dep.treeString());
+      buffer.write(dep.treeString(alreadyPrinted: pickedDeps));
     }
 
-    logger.info(buffer.toString());
+    buffer.writeln('\nCount of dependencies: ${pickedDeps.length}');
+
+    logger.info(buffer.toString().trim());
   }
 
   void _printDeps(String packageName, Set<Dep> deps, bool firstLevel) {
